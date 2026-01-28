@@ -7,3 +7,5 @@ whitenoise==6.6.0
 Pillow
 djangorestframework
 django-cors-headers
+cloudinary
+django-cloudinary-storage

@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'Account',
     'items',
     'orders',
+     "cloudinary",
+    "cloudinary_storage",
 ]
 
 # -------------------------------------------------------------------
@@ -161,5 +163,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
 ]
 
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
