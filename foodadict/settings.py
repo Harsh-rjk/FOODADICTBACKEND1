@@ -1,11 +1,14 @@
 """
-Django settings for foodadict project.
-Production-ready for Render deployment (PostgreSQL)
+Django settings for foodadict project
+Production-ready (Render + PostgreSQL + Cloudinary)
 """
 
 from pathlib import Path
 import os
 import environ
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # -------------------------------------------------------------------
 # BASE DIR
@@ -13,13 +16,12 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # -------------------------------------------------------------------
-# ENV SETUP
+# ENV
 # -------------------------------------------------------------------
 env = environ.Env(
     DEBUG=(bool, False)
 )
 
-# Read .env locally (Render ignores this)
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # -------------------------------------------------------------------
@@ -27,7 +29,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # -------------------------------------------------------------------
 SECRET_KEY = env("SECRET_KEY")
 
-DEBUG = env("DEBUG")
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS",
@@ -35,7 +37,7 @@ ALLOWED_HOSTS = env.list(
 )
 
 # -------------------------------------------------------------------
-# APPLICATIONS
+# APPS
 # -------------------------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -45,16 +47,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third party
+    # Third-party
     'rest_framework',
-     "corsheaders",
+    'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
 
     # Local apps
     'Account',
     'items',
     'orders',
-     "cloudinary",
-    "cloudinary_storage",
 ]
 
 # -------------------------------------------------------------------
@@ -63,7 +65,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-     "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -74,16 +76,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
 CORS_ALLOW_CREDENTIALS = True
 
 # -------------------------------------------------------------------
 # URLS / WSGI
 # -------------------------------------------------------------------
 ROOT_URLCONF = 'foodadict.urls'
-
 WSGI_APPLICATION = 'foodadict.wsgi.application'
 
 # -------------------------------------------------------------------
@@ -106,14 +104,14 @@ TEMPLATES = [
 ]
 
 # -------------------------------------------------------------------
-# DATABASE (PostgreSQL – PROFESSIONAL WAY)
+# DATABASE (POSTGRES)
 # -------------------------------------------------------------------
 DATABASES = {
     'default': env.db()
 }
 
 # -------------------------------------------------------------------
-# PASSWORD VALIDATION
+# PASSWORD VALIDATORS
 # -------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -123,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # -------------------------------------------------------------------
-# INTERNATIONALIZATION
+# I18N
 # -------------------------------------------------------------------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -131,38 +129,50 @@ USE_I18N = True
 USE_TZ = True
 
 # -------------------------------------------------------------------
-# STATIC FILES (RENDER REQUIRED)
+# STATIC FILES (WhiteNoise)
 # -------------------------------------------------------------------
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = (
     "whitenoise.storage.CompressedManifestStaticFilesStorage"
 )
 
 # -------------------------------------------------------------------
-# DEFAULT PRIMARY KEY
+# MEDIA (Cloudinary)
 # -------------------------------------------------------------------
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_FILE_STORAGE = (
+    "cloudinary_storage.storage.MediaCloudinaryStorage"
+)
+
+MEDIA_URL = "/media/"
+
+cloudinary.config(
+    cloud_name=env("CLOUDINARY_CLOUD_NAME"),
+    api_key=env("CLOUDINARY_API_KEY"),
+    api_secret=env("CLOUDINARY_API_SECRET"),
+    secure=True,
+)
 
 # -------------------------------------------------------------------
 # DJANGO REST FRAMEWORK
 # -------------------------------------------------------------------
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
-    ],
+    ]
 }
 
+# -------------------------------------------------------------------
+# CSRF
+# -------------------------------------------------------------------
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1",
+    "https://foodadictbackend102.onrender.com",
     "http://localhost",
+    "http://127.0.0.1",
 ]
 
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
-MEDIA_URL = "/media/"
+# -------------------------------------------------------------------
+# DEFAULT PK
+# -------------------------------------------------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
